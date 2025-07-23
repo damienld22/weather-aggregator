@@ -1,0 +1,23 @@
+{
+  "name": "weather-aggregator",
+  "version": "0.0.1",
+  "description": "Weather aggregator for home assistant",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "start": "node --env-file=.env index.ts",
+    "dev": "node --env-file=.env --watch index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Damien Le Dantec <damien-le-dantec@hotmail.fr>",
+  "license": "ISC",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0"
+  }
+}

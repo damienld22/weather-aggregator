@@ -1,0 +1,48 @@
+{
+  "compilerOptions": {
+    // === Core project setup ===
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "outDir": "./dist", // Even with noEmit, it's good practice to define an output directory, as other tools might use it or you might enable emit later.
+    "rootDir": "./",
+
+    // === Type Checking Options (Highly Recommended) ===
+    "strict": true, // Enables all strict type-checking options below. Strongly recommended for robust type safety.
+    "noImplicitAny": true, // Ensures all variables have explicit or inferred types, preventing 'any'.
+    "strictNullChecks": true, // Catches common null or undefined related errors.
+    "strictFunctionTypes": true, // Ensures functions are strictly typed.
+    "strictPropertyInitialization": true, // Ensures class properties are initialized.
+    "noImplicitThis": true, // Reports 'this' expressions with an implied 'any' type.
+    "useUnknownInCatchVariables": true, // Forces catch clause variables to be 'unknown' instead of 'any'.
+    "alwaysStrict": true, // Ensures all files are parsed in strict mode and emit "use strict" at the top of the output file.
+
+    // === Module Interoperability ===
+    "esModuleInterop": true, // Allows you to use default imports from CommonJS modules. Essential for many Node.js libraries.
+    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file.
+
+    // === Node.js Native TS Specifics ===
+    // These options align TypeScript's type checking with Node.js's native behavior.
+    "allowImportingTsExtensions": true, // Allows imports like `import { foo } from './foo.ts';` in your TypeScript files. Node.js native TS relies on this.
+    "resolveJsonModule": true, // Allows importing .json files.
+    "verbatimModuleSyntax": true, // Crucial for Node's native TS. Enforces explicit `import type` for type-only imports and helps prevent accidental value imports where only types are intended. This maps well to Node's type stripping.
+
+    // === Output Control (for type checking only) ===
+    "noEmit": true // This is the key setting to ensure tsc *only* performs type checking and doesn't generate JS files.
+
+    // === Path Resolution (Optional, for monorepos or complex structures) ===
+    // "baseUrl": "./", // If you have custom path aliases, uncomment this and `paths`.
+    // "paths": {
+    //   "@utils/*": ["./src/utils/*"] // Example alias
+    // },
+  },
+  // === Includes and Excludes ===
+  "include": [
+    "**/*.ts" // Include all TypeScript files in your project.
+  ],
+  "exclude": [
+    "node_modules", // Exclude typical dependencies
+    "dist" // Exclude your build output directory if you were generating JS there
+  ]
+}

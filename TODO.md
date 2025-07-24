@@ -8,4 +8,4 @@
 ## Tech
 
 - [ ] Create a basic logger
-- [ ] Add check with `tsc`
+- [x] Add check with `tsc`

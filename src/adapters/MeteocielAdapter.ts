@@ -1,46 +1,27 @@
 import type { Cradle } from "awilix";
 import type { RainPerHour } from "../domain/RainPerHour.ts";
-import { JSDOM } from "jsdom";
+import type { IMeteocielScrapper } from "../scrappers/MeteocielScrapper.ts";
 
 export interface IMeteocielAdapter {
   getNext24HoursRain(): Promise<RainPerHour[]>;
 }
 
 export class MeteocielAdapter implements IMeteocielAdapter {
-  private BASE_URL = "https://www.meteociel.fr/previsions-arome-1h";
-  private url: string;
-
-  constructor({ pathMeteociel }: Pick<Cradle, "pathMeteociel">) {
-    this.url = `${this.BASE_URL}/${pathMeteociel}`;
+  meteocielScrapper: IMeteocielScrapper;
+  constructor({ meteocielScrapper }: Pick<Cradle, "meteocielScrapper">) {
+    this.meteocielScrapper = meteocielScrapper;
   }
 
-  private async fetchHtml(): Promise<string> {
-    const htmlResponse = await fetch(this.url);
-    const html = await htmlResponse.text();
-    return html;
-  }
-
-  private parseHtml(html: string): RainPerHour[] {
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
-
-    // Get the table containing the previsions (it is nested table at the 5th level)
-    const table = document
-      .querySelector("table")
-      ?.querySelector("td:nth-of-type(2)")
-      ?.querySelector("table")
-      ?.querySelector("table")
-      ?.querySelector("table")
-      ?.querySelector("table");
-
-    const allRows = table?.querySelectorAll("tr") || [];
+  private parseHTMLTableFromScrapper(
+    htmlTable: NodeListOf<HTMLTableRowElement> | never[]
+  ): RainPerHour[] {
     const isHeaderRow = (row: Element) =>
       row.getAttribute("bgcolor") === "#aaaaff";
 
     let currentDateOfRow: Date | null = null;
     const result: RainPerHour[] = [];
 
-    for (const row of allRows) {
+    for (const row of htmlTable) {
       if (!isHeaderRow(row)) {
         // Get the rain value
         const indexRain = row.querySelectorAll("td").length - 3;
@@ -91,7 +72,7 @@ export class MeteocielAdapter implements IMeteocielAdapter {
   }
 
   async getNext24HoursRain(): Promise<RainPerHour[]> {
-    const html = await this.fetchHtml();
-    return this.parseHtml(html);
+    const listTr = await this.meteocielScrapper.fetchHTMLTrList();
+    return this.parseHTMLTableFromScrapper(listTr);
   }
 }

@@ -6,7 +6,7 @@
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
     "outDir": "./dist", // Even with noEmit, it's good practice to define an output directory, as other tools might use it or you might enable emit later.
-    "rootDir": "./",
+    "rootDir": "./src",
 
     // === Type Checking Options (Highly Recommended) ===
     "strict": true, // Enables all strict type-checking options below. Strongly recommended for robust type safety.
@@ -39,7 +39,7 @@
   },
   // === Includes and Excludes ===
   "include": [
-    "**/*.ts" // Include all TypeScript files in your project.
+    "src/**/*.ts" // Include all TypeScript files in your project.
   ],
   "exclude": [
     "node_modules", // Exclude typical dependencies

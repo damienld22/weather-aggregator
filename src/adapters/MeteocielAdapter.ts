@@ -1,11 +1,18 @@
-import type { RainPerHour } from "./domain/RainPerHour.ts";
+import type { Cradle } from "awilix";
+import type { RainPerHour } from "../domain/RainPerHour.ts";
 import { JSDOM } from "jsdom";
 
-export class MeteocielAdapter {
-  // url = "https://www.meteociel.fr/previsions-arome-1h/12368/la_bouexiere.htm";
-  url = "https://www.meteociel.fr/previsions-arome-1h/22365/calais.htm";
+export interface IMeteocielAdapter {
+  getNext24HoursRain(): Promise<RainPerHour[]>;
+}
 
-  constructor() {}
+export class MeteocielAdapter implements IMeteocielAdapter {
+  private BASE_URL = "https://www.meteociel.fr/previsions-arome-1h";
+  private url: string;
+
+  constructor({ pathMeteociel }: Pick<Cradle, "pathMeteociel">) {
+    this.url = `${this.BASE_URL}/${pathMeteociel}`;
+  }
 
   private async fetchHtml(): Promise<string> {
     const htmlResponse = await fetch(this.url);

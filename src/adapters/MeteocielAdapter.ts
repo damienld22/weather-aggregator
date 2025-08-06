@@ -42,6 +42,12 @@ export class MeteocielAdapter implements IMeteocielAdapter {
           if (dateTextNumberPart) {
             currentDateOfRow = new Date();
             currentDateOfRow.setDate(parseInt(dateTextNumberPart));
+
+            // If the date is for the next month, we adjust
+
+            if (new Date().getDate() > parseInt(dateTextNumberPart)) {
+              currentDateOfRow.setMonth(currentDateOfRow.getMonth() + 1);
+            }
           }
         }
 

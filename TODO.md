@@ -4,7 +4,6 @@
 
 - [x] Create basic hello world
 - [ ] Create packaged app
-- [ ] Handle case of end of month (with TU)
 
 ## Tech
 

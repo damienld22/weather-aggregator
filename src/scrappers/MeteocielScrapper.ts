@@ -19,6 +19,7 @@ export class MeteocielScrapper implements IMeteocielScrapper {
     // Fetch the HTML from the Meteociel URL
     const BASE_URL = "https://www.meteociel.fr/previsions-arome-1h";
     const url = `${BASE_URL}/${this.pathMeteociel}`;
+    console.log(`Fetching HTML from: ${url}...`);
     const htmlResponse = await fetch(url);
     const html = await htmlResponse.text();
 

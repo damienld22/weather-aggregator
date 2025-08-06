@@ -9,10 +9,6 @@ export function app({
 
   const app = express();
 
-  app.get("/", (_, res) => {
-    res.send("Hello world");
-  });
-
   app.get("/rain", async (_, res) => {
     const rainData = await meteocielAdapter.getNext24HoursRain();
     res.json(rainData);

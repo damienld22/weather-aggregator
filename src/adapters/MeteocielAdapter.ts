@@ -1,9 +1,12 @@
 import type { Cradle } from "awilix";
-import type { RainPerHour } from "../domain/RainPerHour.ts";
+import type {
+  RainPerHour,
+  RainPerHourInformations,
+} from "../domain/RainPerHour.ts";
 import type { IMeteocielScrapper } from "../scrappers/MeteocielScrapper.ts";
 
 export interface IMeteocielAdapter {
-  getNext24HoursRain(): Promise<RainPerHour[]>;
+  getNext24HoursRain(): Promise<RainPerHourInformations>;
 }
 
 export class MeteocielAdapter implements IMeteocielAdapter {
@@ -77,8 +80,32 @@ export class MeteocielAdapter implements IMeteocielAdapter {
     return result;
   }
 
-  async getNext24HoursRain(): Promise<RainPerHour[]> {
+  private parseUpdatedAtFromHtmlText(updatedAtText: string): string {
+    const resultDate = new Date();
+
+    const dateMatchRegexResult = updatedAtText.match(/\d{1,2}:\d{2}/);
+    const dateMatch = dateMatchRegexResult ? dateMatchRegexResult[0] : null;
+    if (!dateMatch) {
+      throw new Error("No date found in updatedAtText");
+    }
+
+    const [hour, min] = dateMatch.split(":");
+    resultDate.setHours(parseInt(hour), parseInt(min), 0);
+
+    if (new Date().getTime() < resultDate.getTime()) {
+      resultDate.setDate(resultDate.getDate() - 1);
+    }
+
+    return resultDate.toISOString();
+  }
+
+  async getNext24HoursRain(): Promise<RainPerHourInformations> {
     const listTr = await this.meteocielScrapper.fetchHTMLTrList();
-    return this.parseHTMLTableFromScrapper(listTr);
+    const updatedAtText = await this.meteocielScrapper.fetchUpdatedAtText();
+
+    return {
+      updatedAt: this.parseUpdatedAtFromHtmlText(updatedAtText),
+      data: this.parseHTMLTableFromScrapper(listTr),
+    };
   }
 }

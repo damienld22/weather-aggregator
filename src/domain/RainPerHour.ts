@@ -6,6 +6,11 @@ export type RainPerHour = {
 
 export type RainApiName = "meteociel" | "unknown";
 
+export type RainPerHourInformations = {
+  updatedAt: string; // ISO 8601 format, e.g., "2023-10-01T14:00:00Z"
+  data: RainPerHour[];
+};
+
 export type RainPerHourListByApi = {
-  [apiName in RainApiName]: RainPerHour[];
+  [apiName in RainApiName]: RainPerHourInformations;
 };

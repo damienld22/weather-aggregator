@@ -61,119 +61,70 @@ export default function MultiModelRainForecastTable({ data }: Props) {
 
       {/* Tableaux par jour */}
       <div className="space-y-8">
-        {Object.entries(byDay).map(([day, entries]) => (
-          <section key={day}>
-            <h2 className="mb-4 text-xl font-semibold text-gray-800 dark:text-gray-200">
-              {day}
-            </h2>
+        {Object.entries(byDay).map(([day, entries]) => {
+          // Calculer les totaux pour ce jour
+          const gfsTotal = entries.reduce((sum, e) => sum + (e.gfs ?? 0), 0);
+          const wrfTotal = entries.reduce((sum, e) => sum + (e.wrf ?? 0), 0);
 
-            {/* Tableau responsive */}
-            <div className="overflow-hidden rounded-lg shadow-md">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
-                        Heure
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
-                        Période (3h)
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
-                        GFS
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
-                        WRF
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
-                        Écart
-                      </th>
-                    </tr>
-                  </thead>
+          return (
+            <section key={day}>
+              <h2 className="mb-4 text-xl font-semibold text-gray-800 dark:text-gray-200">
+                {day}
+              </h2>
+
+              {/* Tableau responsive */}
+              <div className="overflow-hidden rounded-lg shadow-md">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
+                          Période (3h)
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
+                          GFS {hasGFS && `(Total: ${gfsTotal.toFixed(1)} mm)`}
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
+                          WRF {hasWRF && `(Total: ${wrfTotal.toFixed(1)} mm)`}
+                        </th>
+                      </tr>
+                    </thead>
                   <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                    {entries.map((entry, index) => {
-                      const difference = calculateDifference(entry.gfs, entry.wrf);
-                      const diffColor = getDifferenceColor(difference);
-
-                      return (
-                        <tr
-                          key={`${day}-${entry.hour}-${index}`}
-                          className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                    {entries.map((entry, index) => (
+                      <tr
+                        key={`${day}-${entry.hour}-${index}`}
+                        className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 sm:px-6">
+                          {entry.timeRange}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
+                            entry.gfs !== undefined
+                              ? getRainIntensityColor(entry.gfs)
+                              : 'text-gray-400'
+                          }`}
                         >
-                          <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 sm:px-6">
-                            {entry.hour}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500 dark:text-gray-400 sm:px-6">
-                            {entry.timeRange}
-                          </td>
-                          <td
-                            className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
-                              entry.gfs !== undefined
-                                ? getRainIntensityColor(entry.gfs)
-                                : 'text-gray-400'
-                            }`}
-                          >
-                            {formatOptionalRain(entry.gfs)}
-                          </td>
-                          <td
-                            className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
-                              entry.wrf !== undefined
-                                ? getRainIntensityColor(entry.wrf)
-                                : 'text-gray-400'
-                            }`}
-                          >
-                            {formatOptionalRain(entry.wrf)}
-                          </td>
-                          <td
-                            className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${diffColor}`}
-                          >
-                            {formatDifference(difference)}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                          {formatOptionalRain(entry.gfs)}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
+                            entry.wrf !== undefined
+                              ? getRainIntensityColor(entry.wrf)
+                              : 'text-gray-400'
+                          }`}
+                        >
+                          {formatOptionalRain(entry.wrf)}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             </div>
-
-            {/* Statistiques du jour */}
-            <div className="mt-2 flex justify-end space-x-6 text-xs text-gray-600 dark:text-gray-400">
-              {hasGFS && (
-                <div className="space-x-2">
-                  <span className="font-medium">GFS:</span>
-                  <span>
-                    Total:{' '}
-                    {entries
-                      .reduce((sum, e) => sum + (e.gfs ?? 0), 0)
-                      .toFixed(1)}{' '}
-                    mm
-                  </span>
-                  <span>
-                    Max:{' '}
-                    {Math.max(...entries.map(e => e.gfs ?? 0)).toFixed(1)} mm
-                  </span>
-                </div>
-              )}
-              {hasWRF && (
-                <div className="space-x-2">
-                  <span className="font-medium">WRF:</span>
-                  <span>
-                    Total:{' '}
-                    {entries
-                      .reduce((sum, e) => sum + (e.wrf ?? 0), 0)
-                      .toFixed(1)}{' '}
-                    mm
-                  </span>
-                  <span>
-                    Max:{' '}
-                    {Math.max(...entries.map(e => e.wrf ?? 0)).toFixed(1)} mm
-                  </span>
-                </div>
-              )}
-            </div>
-          </section>
-        ))}
+            </section>
+          );
+        })}
       </div>
 
       {/* Légende */}
@@ -202,11 +153,6 @@ export default function MultiModelRainForecastTable({ data }: Props) {
               <strong>WRF (Weather Research and Forecasting)</strong> : Modèle
               haute résolution (~3 km), plus précis localement
             </p>
-            <p className="mt-2">
-              <strong>Écart</strong> : La différence entre les deux modèles.
-              Un écart important (🔴) indique une incertitude sur les
-              prévisions.
-            </p>
           </div>
         </div>
       </footer>
@@ -220,34 +166,4 @@ export default function MultiModelRainForecastTable({ data }: Props) {
 function formatOptionalRain(mm: number | undefined): string {
   if (mm === undefined) return 'N/A';
   return formatRainAmount(mm);
-}
-
-/**
- * Calcule la différence absolue entre deux valeurs optionnelles
- */
-function calculateDifference(
-  gfs: number | undefined,
-  wrf: number | undefined
-): number | null {
-  if (gfs === undefined || wrf === undefined) return null;
-  return Math.abs(gfs - wrf);
-}
-
-/**
- * Formate la différence entre modèles
- */
-function formatDifference(diff: number | null): string {
-  if (diff === null) return '—';
-  if (diff < 0.1) return '✓';
-  return `${diff.toFixed(1)} mm`;
-}
-
-/**
- * Retourne une couleur selon l'importance de la différence
- */
-function getDifferenceColor(diff: number | null): string {
-  if (diff === null) return 'text-gray-400';
-  if (diff < 0.5) return 'text-green-600'; // Accord excellent
-  if (diff < 2) return 'text-yellow-600'; // Désaccord modéré
-  return 'text-red-600'; // Désaccord important
 }

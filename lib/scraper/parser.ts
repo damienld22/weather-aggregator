@@ -131,8 +131,12 @@ function parseEntry(
   const hour = `${hourNum.toString().padStart(2, '0')}h`;
 
   // Calculer la période de 3h (l'heure affichée est la fin de la période)
-  const startHour = hourNum - 3;
-  const timeRange = `${startHour}h-${hour}`;
+  // Gérer le passage de minuit (ex: 01h -> 22h-01h)
+  let startHour = hourNum - 3;
+  if (startHour < 0) {
+    startHour += 24;
+  }
+  const timeRange = `${startHour.toString().padStart(2, '0')}h-${hour}`;
 
   // Parser la quantité de pluie
   let amount = 0;

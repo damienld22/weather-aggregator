@@ -372,26 +372,21 @@ function parseLastUpdate(html: string): string | undefined {
   try {
     // Recherche directe dans le HTML brut pour gérer l'encodage
     // Pattern flexible pour gérer "Réactualisé" avec différents encodages
-    const pattern = /R[eé]actualis[eé]\\s+[aà]\\s+(\\d{2}:\\d{2})\\s*\\(run\\s+(\\w+[-\\w]*)\\s+de\\s+(\\d+Z)\\)/i;
+    const pattern = /R[eé]actualis[eé]\s+[aà]\s+(\d{2}:\d{2})\s*\(run\s+([\w-]+)\s+de\s+(\d+Z)\)/i;
     const match = html.match(pattern);
 
     if (match) {
       const time = match[1];      // "16:46"
-      const model = match[2];     // "ICON-EU"
-      const run = match[3];       // "12Z"
-      const result = `${time} (run ${model} de ${run})`;
-      return result;
+      return time;
     }
 
     // Essayer une recherche plus simple si le pattern complet ne matche pas
-    const simplePattern = /(\\d{2}:\\d{2})\\s*\\(run\\s+(\\w+[-\\w]*)\\s+de\\s+(\\d+Z)\\)/i;
+    const simplePattern = /(\d{2}:\d{2})\s*\(run\s+([\w-]+)\s+de\s+(\d+Z)\)/i;
     const simpleMatch = html.match(simplePattern);
 
     if (simpleMatch) {
       const time = simpleMatch[1];
-      const model = simpleMatch[2];
-      const run = simpleMatch[3];
-      return `${time} (run ${model} de ${run})`;
+      return time;
     }
 
     return undefined;

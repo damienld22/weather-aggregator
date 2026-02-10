@@ -197,10 +197,7 @@ export function parseLastUpdate(html: string): string | undefined {
 
     if (match) {
       const time = match[1];      // "17:01"
-      const model = match[2];     // "GFS" ou "WRF"
-      const run = match[3];       // "12Z"
-      const result = `${time} (run ${model} de ${run})`;
-      return result;
+      return time;
     }
 
     // Essayer une recherche plus simple si le pattern complet ne matche pas
@@ -209,9 +206,7 @@ export function parseLastUpdate(html: string): string | undefined {
 
     if (simpleMatch) {
       const time = simpleMatch[1];
-      const model = simpleMatch[2];
-      const run = simpleMatch[3];
-      return `${time} (run ${model} de ${run})`;
+      return time;
     }
 
     return undefined;

@@ -3,12 +3,13 @@
  * Affiche côte à côte les données GFS et WRF
  */
 
-import type { MultiModelForecast } from '@/lib/scraper/types';
+import type { MultiModelForecast } from "@/lib/scraper/types";
 import {
   formatDate,
   formatRainAmount,
   getRainIntensityColor,
-} from '@/lib/utils/format';
+} from "@/lib/utils/format";
+import CloudIcon from "./CloudIcon";
 
 interface Props {
   data: MultiModelForecast;
@@ -24,27 +25,34 @@ export default function MultiModelRainForecastTable({ data }: Props) {
       acc[entry.day].push(entry);
       return acc;
     },
-    {} as Record<string, typeof data.entries>
+    {} as Record<string, typeof data.entries>,
   );
 
   // Vérifier si au moins un modèle a des données
-  const hasGFS = data.entries.some(e => e.gfs !== undefined);
-  const hasWRF = data.entries.some(e => e.wrf !== undefined);
-  const hasAROME = data.entries.some(e => e.arome !== undefined);
-  const hasARPEGE = data.entries.some(e => e.arpege !== undefined);
-  const hasICONEU = data.entries.some(e => e.iconeu !== undefined);
+  const hasGFS = data.entries.some((e) => e.gfs !== undefined);
+  const hasWRF = data.entries.some((e) => e.wrf !== undefined);
+  const hasAROME = data.entries.some((e) => e.arome !== undefined);
+  const hasARPEGE = data.entries.some((e) => e.arpege !== undefined);
+  const hasICONEU = data.entries.some((e) => e.iconeu !== undefined);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">
-          Prévisions de pluie - {data.location}
-        </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Mis à jour le {formatDate(data.fetchedAt)}
-        </p>
-        <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center gap-4">
+          <div className="flex-shrink-0">
+            <CloudIcon className="h-12 w-12 text-blue-500 dark:text-blue-400 sm:h-14 sm:w-14" />
+          </div>
+          <div className="flex-1">
+            <h1 className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-3xl font-extrabold text-transparent dark:from-blue-400 dark:to-cyan-400 sm:text-5xl">
+              Prévisions de pluie
+            </h1>
+            <p className="mt-1 text-lg font-medium text-gray-700 dark:text-gray-300 sm:text-xl">
+              {data.location}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
           {data.aromeLastUpdate && (
             <span className="rounded bg-green-100 px-2 py-1 dark:bg-green-900/30">
               <strong>AROME:</strong> {data.aromeLastUpdate}
@@ -71,10 +79,6 @@ export default function MultiModelRainForecastTable({ data }: Props) {
             </span>
           )}
         </div>
-        <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-          Source: meteociel.fr • Les valeurs indiquent la quantité de pluie sur
-          3 heures
-        </p>
       </header>
 
       {/* Alertes si un modèle est indisponible */}
@@ -110,9 +114,18 @@ export default function MultiModelRainForecastTable({ data }: Props) {
           // Calculer les totaux pour ce jour
           const gfsTotal = entries.reduce((sum, e) => sum + (e.gfs ?? 0), 0);
           const wrfTotal = entries.reduce((sum, e) => sum + (e.wrf ?? 0), 0);
-          const aromeTotal = entries.reduce((sum, e) => sum + (e.arome ?? 0), 0);
-          const arpegeTotal = entries.reduce((sum, e) => sum + (e.arpege ?? 0), 0);
-          const iconeuTotal = entries.reduce((sum, e) => sum + (e.iconeu ?? 0), 0);
+          const aromeTotal = entries.reduce(
+            (sum, e) => sum + (e.arome ?? 0),
+            0,
+          );
+          const arpegeTotal = entries.reduce(
+            (sum, e) => sum + (e.arpege ?? 0),
+            0,
+          );
+          const iconeuTotal = entries.reduce(
+            (sum, e) => sum + (e.iconeu ?? 0),
+            0,
+          );
 
           return (
             <section key={day}>
@@ -130,82 +143,85 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                           Période (3h)
                         </th>
                         <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
-                          AROME {hasAROME && `(Total: ${aromeTotal.toFixed(1)} mm)`}
+                          AROME{" "}
+                          {hasAROME && `(Total: ${aromeTotal.toFixed(1)} mm)`}
                         </th>
                         <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
                           WRF {hasWRF && `(Total: ${wrfTotal.toFixed(1)} mm)`}
                         </th>
                         <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
-                          ICON-EU {hasICONEU && `(Total: ${iconeuTotal.toFixed(1)} mm)`}
+                          ICON-EU{" "}
+                          {hasICONEU && `(Total: ${iconeuTotal.toFixed(1)} mm)`}
                         </th>
                         <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
-                          ARPEGE {hasARPEGE && `(Total: ${arpegeTotal.toFixed(1)} mm)`}
+                          ARPEGE{" "}
+                          {hasARPEGE && `(Total: ${arpegeTotal.toFixed(1)} mm)`}
                         </th>
                         <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
                           GFS {hasGFS && `(Total: ${gfsTotal.toFixed(1)} mm)`}
                         </th>
                       </tr>
                     </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                    {entries.map((entry, index) => (
-                      <tr
-                        key={`${day}-${entry.hour}-${index}`}
-                        className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-                      >
-                        <td className="sticky left-0 z-10 min-h-[44px] whitespace-nowrap bg-white px-3 py-3 text-sm font-medium text-gray-900 shadow-[2px_0_4px_rgba(0,0,0,0.1)] dark:bg-gray-900 dark:text-gray-100 sm:px-4 md:px-6 md:py-4">
-                          {entry.timeRange}
-                        </td>
-                        <td
-                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
-                            entry.arome !== undefined
-                              ? getRainIntensityColor(entry.arome)
-                              : 'text-gray-400'
-                          }`}
+                    <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                      {entries.map((entry, index) => (
+                        <tr
+                          key={`${day}-${entry.hour}-${index}`}
+                          className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
                         >
-                          {formatOptionalRain(entry.arome)}
-                        </td>
-                        <td
-                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
-                            entry.wrf !== undefined
-                              ? getRainIntensityColor(entry.wrf)
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {formatOptionalRain(entry.wrf)}
-                        </td>
-                        <td
-                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
-                            entry.iconeu !== undefined
-                              ? getRainIntensityColor(entry.iconeu)
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {formatOptionalRain(entry.iconeu)}
-                        </td>
-                        <td
-                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
-                            entry.arpege !== undefined
-                              ? getRainIntensityColor(entry.arpege)
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {formatOptionalRain(entry.arpege)}
-                        </td>
-                        <td
-                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
-                            entry.gfs !== undefined
-                              ? getRainIntensityColor(entry.gfs)
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {formatOptionalRain(entry.gfs)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <td className="sticky left-0 z-10 min-h-[44px] whitespace-nowrap bg-white px-3 py-3 text-sm font-medium text-gray-900 shadow-[2px_0_4px_rgba(0,0,0,0.1)] dark:bg-gray-900 dark:text-gray-100 sm:px-4 md:px-6 md:py-4">
+                            {entry.timeRange}
+                          </td>
+                          <td
+                            className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
+                              entry.arome !== undefined
+                                ? getRainIntensityColor(entry.arome)
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {formatOptionalRain(entry.arome)}
+                          </td>
+                          <td
+                            className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
+                              entry.wrf !== undefined
+                                ? getRainIntensityColor(entry.wrf)
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {formatOptionalRain(entry.wrf)}
+                          </td>
+                          <td
+                            className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
+                              entry.iconeu !== undefined
+                                ? getRainIntensityColor(entry.iconeu)
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {formatOptionalRain(entry.iconeu)}
+                          </td>
+                          <td
+                            className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
+                              entry.arpege !== undefined
+                                ? getRainIntensityColor(entry.arpege)
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {formatOptionalRain(entry.arpege)}
+                          </td>
+                          <td
+                            className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
+                              entry.gfs !== undefined
+                                ? getRainIntensityColor(entry.gfs)
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {formatOptionalRain(entry.gfs)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
             </section>
           );
         })}
@@ -218,7 +234,7 @@ export default function MultiModelRainForecastTable({ data }: Props) {
             💡 Comment lire ce tableau ?
           </h3>
           <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-            Chaque ligne indique la quantité de pluie tombée sur les{' '}
+            Chaque ligne indique la quantité de pluie tombée sur les{" "}
             <strong>3 heures précédentes</strong>. Par exemple, la ligne
             &quot;22h&quot; indique la pluie entre 19h et 22h.
           </p>
@@ -238,16 +254,16 @@ export default function MultiModelRainForecastTable({ data }: Props) {
               haute résolution (~3 km), plus précis localement
             </p>
             <p>
-              <strong>AROME</strong> : Modèle français de Météo-France, très haute
-              résolution (~1.3 km), prévisions à court terme (48h)
+              <strong>AROME</strong> : Modèle français de Météo-France, très
+              haute résolution (~1.3 km), prévisions à court terme (48h)
             </p>
             <p>
               <strong>ARPEGE</strong> : Modèle global de Météo-France,
               résolution variable (~10 km sur la France), prévisions à 4 jours
             </p>
             <p>
-              <strong>ICON-EU</strong> : Modèle européen du DWD (Deutscher Wetterdienst),
-              résolution ~7 km, prévisions à 5 jours
+              <strong>ICON-EU</strong> : Modèle européen du DWD (Deutscher
+              Wetterdienst), résolution ~7 km, prévisions à 5 jours
             </p>
           </div>
         </div>
@@ -260,6 +276,6 @@ export default function MultiModelRainForecastTable({ data }: Props) {
  * Formate une quantité de pluie optionnelle
  */
 function formatOptionalRain(mm: number | undefined): string {
-  if (mm === undefined) return '/';
+  if (mm === undefined) return "/";
   return formatRainAmount(mm);
 }

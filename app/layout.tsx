@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Weather Aggregator',
+  title: 'Prévisions de pluie - La Bouëxière',
   description:
-    'Agrégateur de prévisions météo pour La Bouëxière - Données scrappées depuis meteociel.fr',
+    'Agrégateur de prévisions météo multi-modèles pour La Bouëxière - Données en temps réel depuis meteociel.fr',
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

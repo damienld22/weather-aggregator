@@ -30,6 +30,7 @@ export default function MultiModelRainForecastTable({ data }: Props) {
   // Vérifier si au moins un modèle a des données
   const hasGFS = data.entries.some(e => e.gfs !== undefined);
   const hasWRF = data.entries.some(e => e.wrf !== undefined);
+  const hasAROME = data.entries.some(e => e.arome !== undefined);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -52,6 +53,11 @@ export default function MultiModelRainForecastTable({ data }: Props) {
               <strong>WRF:</strong> {data.wrfLastUpdate}
             </span>
           )}
+          {data.aromeLastUpdate && (
+            <span className="rounded bg-green-100 px-2 py-1 dark:bg-green-900/30">
+              <strong>AROME:</strong> {data.aromeLastUpdate}
+            </span>
+          )}
         </div>
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
           Source: meteociel.fr • Les valeurs indiquent la quantité de pluie sur
@@ -70,6 +76,11 @@ export default function MultiModelRainForecastTable({ data }: Props) {
           ⚠️ Les données du modèle WRF sont temporairement indisponibles.
         </div>
       )}
+      {!hasAROME && (
+        <div className="mb-6 rounded-lg bg-yellow-100 p-4 text-sm text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+          ⚠️ Les données du modèle AROME sont temporairement indisponibles.
+        </div>
+      )}
 
       {/* Tableaux par jour */}
       <div className="space-y-8">
@@ -77,6 +88,7 @@ export default function MultiModelRainForecastTable({ data }: Props) {
           // Calculer les totaux pour ce jour
           const gfsTotal = entries.reduce((sum, e) => sum + (e.gfs ?? 0), 0);
           const wrfTotal = entries.reduce((sum, e) => sum + (e.wrf ?? 0), 0);
+          const aromeTotal = entries.reduce((sum, e) => sum + (e.arome ?? 0), 0);
 
           return (
             <section key={day}>
@@ -98,6 +110,9 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                         </th>
                         <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
                           WRF {hasWRF && `(Total: ${wrfTotal.toFixed(1)} mm)`}
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
+                          AROME {hasAROME && `(Total: ${aromeTotal.toFixed(1)} mm)`}
                         </th>
                       </tr>
                     </thead>
@@ -127,6 +142,15 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                           }`}
                         >
                           {formatOptionalRain(entry.wrf)}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
+                            entry.arome !== undefined
+                              ? getRainIntensityColor(entry.arome)
+                              : 'text-gray-400'
+                          }`}
+                        >
+                          {formatOptionalRain(entry.arome)}
                         </td>
                       </tr>
                     ))}
@@ -165,6 +189,10 @@ export default function MultiModelRainForecastTable({ data }: Props) {
               <strong>WRF (Weather Research and Forecasting)</strong> : Modèle
               haute résolution (~3 km), plus précis localement
             </p>
+            <p>
+              <strong>AROME</strong> : Modèle français de Météo-France, très haute
+              résolution (~1.3 km), prévisions à court terme (48h)
+            </p>
           </div>
         </div>
       </footer>
@@ -176,6 +204,6 @@ export default function MultiModelRainForecastTable({ data }: Props) {
  * Formate une quantité de pluie optionnelle
  */
 function formatOptionalRain(mm: number | undefined): string {
-  if (mm === undefined) return 'N/A';
+  if (mm === undefined) return '/';
   return formatRainAmount(mm);
 }

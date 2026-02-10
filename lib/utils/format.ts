@@ -20,10 +20,10 @@ export function formatDate(date: Date): string {
 /**
  * Formate une quantité de pluie en mm
  * @param mm - Quantité de pluie en millimètres
- * @returns La quantité formatée (ex: "0.3 mm", "Aucune")
+ * @returns La quantité formatée (ex: "0.3 mm", "0 mm")
  */
 export function formatRainAmount(mm: number): string {
-  if (mm === 0) return 'Aucune';
+  if (mm === 0) return '0 mm';
   if (mm < 0.1) return '< 0.1 mm';
   return `${mm.toFixed(1)} mm`;
 }

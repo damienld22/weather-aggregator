@@ -5,21 +5,22 @@
 
 import { fetchRainForecast } from './meteociel';
 import { fetchRainForecastWRF } from './meteociel-wrf';
+import { fetchRainForecastAROME } from './meteociel-arome';
 import { MultiModelForecast, MultiModelRainEntry, RainForecast } from './types';
 
 /**
  * Récupère les prévisions de pluie depuis plusieurs modèles et les agrège
  * Les modèles sont récupérés en parallèle pour optimiser les performances
  *
- * @returns Prévisions agrégées avec données GFS et WRF alignées
+ * @returns Prévisions agrégées avec données GFS, WRF et AROME alignées
  */
 export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
   const startTime = Date.now();
   console.log('[Aggregator] Fetching forecasts from multiple models...');
 
-  // Fetch parallèle des deux modèles pour optimiser les performances
+  // Fetch parallèle des trois modèles pour optimiser les performances
   // Utilisation de Promise.allSettled pour graceful degradation
-  const [gfsResult, wrfResult] = await Promise.allSettled([
+  const [gfsResult, wrfResult, aromeResult] = await Promise.allSettled([
     fetchRainForecast().catch(err => {
       console.error('[Aggregator] GFS fetch failed:', err.message);
       return null;
@@ -28,25 +29,30 @@ export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
       console.error('[Aggregator] WRF fetch failed:', err.message);
       return null;
     }),
+    fetchRainForecastAROME().catch(err => {
+      console.error('[Aggregator] AROME fetch failed:', err.message);
+      return null;
+    }),
   ]);
 
   const gfsData = gfsResult.status === 'fulfilled' ? gfsResult.value : null;
   const wrfData = wrfResult.status === 'fulfilled' ? wrfResult.value : null;
+  const aromeData = aromeResult.status === 'fulfilled' ? aromeResult.value : null;
 
   console.log(
     `[Aggregator] Fetch completed in ${Date.now() - startTime}ms`,
-    `(GFS: ${gfsData ? 'OK' : 'FAILED'}, WRF: ${wrfData ? 'OK' : 'FAILED'})`
+    `(GFS: ${gfsData ? 'OK' : 'FAILED'}, WRF: ${wrfData ? 'OK' : 'FAILED'}, AROME: ${aromeData ? 'OK' : 'FAILED'})`
   );
 
-  // Si les deux modèles échouent, lever une erreur
-  if (!gfsData && !wrfData) {
+  // Si tous les modèles échouent, lever une erreur
+  if (!gfsData && !wrfData && !aromeData) {
     throw new Error(
-      'Impossible de récupérer les données météo. Les deux modèles (GFS et WRF) sont indisponibles.'
+      'Impossible de récupérer les données météo. Tous les modèles (GFS, WRF et AROME) sont indisponibles.'
     );
   }
 
   // Merger les données
-  const mergedEntries = mergeForecasts(gfsData, wrfData);
+  const mergedEntries = mergeForecasts(gfsData, wrfData, aromeData);
 
   console.log(`[Aggregator] Merged ${mergedEntries.length} entries`);
 
@@ -56,16 +62,18 @@ export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
     entries: mergedEntries,
     gfsLastUpdate: gfsData?.lastUpdate,
     wrfLastUpdate: wrfData?.lastUpdate,
+    aromeLastUpdate: aromeData?.lastUpdate,
   };
 }
 
 /**
- * Fusionne les prévisions de deux modèles en alignant sur jour + heure
- * Gestion des cas où un modèle a des données que l'autre n'a pas
+ * Fusionne les prévisions de trois modèles en alignant sur jour + heure
+ * Gestion des cas où un modèle a des données que les autres n'ont pas
  */
 function mergeForecasts(
   gfsData: RainForecast | null,
-  wrfData: RainForecast | null
+  wrfData: RainForecast | null,
+  aromeData: RainForecast | null
 ): MultiModelRainEntry[] {
   const merged = new Map<string, MultiModelRainEntry>();
 
@@ -82,6 +90,7 @@ function mergeForecasts(
         timeRange: entry.timeRange,
         gfs: entry.amount,
         wrf: undefined,
+        arome: undefined,
       });
     }
   }
@@ -93,7 +102,7 @@ function mergeForecasts(
       const existing = merged.get(key);
 
       if (existing) {
-        // Fusionner avec l'entrée GFS existante
+        // Fusionner avec l'entrée existante
         existing.wrf = entry.amount;
       } else {
         // Créer une nouvelle entrée (WRF uniquement)
@@ -103,6 +112,30 @@ function mergeForecasts(
           timeRange: entry.timeRange,
           gfs: undefined,
           wrf: entry.amount,
+          arome: undefined,
+        });
+      }
+    }
+  }
+
+  // Ajouter/fusionner les données AROME
+  if (aromeData) {
+    for (const entry of aromeData.entries) {
+      const key = makeKey(entry.day, entry.hour);
+      const existing = merged.get(key);
+
+      if (existing) {
+        // Fusionner avec l'entrée existante
+        existing.arome = entry.amount;
+      } else {
+        // Créer une nouvelle entrée (AROME uniquement)
+        merged.set(key, {
+          day: entry.day,
+          hour: entry.hour,
+          timeRange: entry.timeRange,
+          gfs: undefined,
+          wrf: undefined,
+          arome: entry.amount,
         });
       }
     }

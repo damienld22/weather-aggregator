@@ -7,6 +7,7 @@ import { fetchRainForecast } from './meteociel';
 import { fetchRainForecastWRF } from './meteociel-wrf';
 import { fetchRainForecastAROME } from './meteociel-arome';
 import { fetchRainForecastARPEGE } from './meteociel-arpege';
+import { fetchRainForecastICONEU } from './meteociel-iconeu';
 import { MultiModelForecast, MultiModelRainEntry, RainForecast } from './types';
 
 /**
@@ -19,9 +20,9 @@ export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
   const startTime = Date.now();
   console.log('[Aggregator] Fetching forecasts from multiple models...');
 
-  // Fetch parallèle des quatre modèles pour optimiser les performances
+  // Fetch parallèle des cinq modèles pour optimiser les performances
   // Utilisation de Promise.allSettled pour graceful degradation
-  const [gfsResult, wrfResult, aromeResult, arpegeResult] = await Promise.allSettled([
+  const [gfsResult, wrfResult, aromeResult, arpegeResult, iconeuResult] = await Promise.allSettled([
     fetchRainForecast().catch(err => {
       console.error('[Aggregator] GFS fetch failed:', err.message);
       return null;
@@ -38,27 +39,32 @@ export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
       console.error('[Aggregator] ARPEGE fetch failed:', err.message);
       return null;
     }),
+    fetchRainForecastICONEU().catch(err => {
+      console.error('[Aggregator] ICON-EU fetch failed:', err.message);
+      return null;
+    }),
   ]);
 
   const gfsData = gfsResult.status === 'fulfilled' ? gfsResult.value : null;
   const wrfData = wrfResult.status === 'fulfilled' ? wrfResult.value : null;
   const aromeData = aromeResult.status === 'fulfilled' ? aromeResult.value : null;
   const arpegeData = arpegeResult.status === 'fulfilled' ? arpegeResult.value : null;
+  const iconeuData = iconeuResult.status === 'fulfilled' ? iconeuResult.value : null;
 
   console.log(
     `[Aggregator] Fetch completed in ${Date.now() - startTime}ms`,
-    `(GFS: ${gfsData ? 'OK' : 'FAILED'}, WRF: ${wrfData ? 'OK' : 'FAILED'}, AROME: ${aromeData ? 'OK' : 'FAILED'}, ARPEGE: ${arpegeData ? 'OK' : 'FAILED'})`
+    `(GFS: ${gfsData ? 'OK' : 'FAILED'}, WRF: ${wrfData ? 'OK' : 'FAILED'}, AROME: ${aromeData ? 'OK' : 'FAILED'}, ARPEGE: ${arpegeData ? 'OK' : 'FAILED'}, ICON-EU: ${iconeuData ? 'OK' : 'FAILED'})`
   );
 
   // Si tous les modèles échouent, lever une erreur
-  if (!gfsData && !wrfData && !aromeData && !arpegeData) {
+  if (!gfsData && !wrfData && !aromeData && !arpegeData && !iconeuData) {
     throw new Error(
-      'Impossible de récupérer les données météo. Tous les modèles (GFS, WRF, AROME et ARPEGE) sont indisponibles.'
+      'Impossible de récupérer les données météo. Tous les modèles (GFS, WRF, AROME, ARPEGE et ICON-EU) sont indisponibles.'
     );
   }
 
   // Merger les données
-  const mergedEntries = mergeForecasts(gfsData, wrfData, aromeData, arpegeData);
+  const mergedEntries = mergeForecasts(gfsData, wrfData, aromeData, arpegeData, iconeuData);
 
   console.log(`[Aggregator] Merged ${mergedEntries.length} entries`);
 
@@ -70,18 +76,20 @@ export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
     wrfLastUpdate: wrfData?.lastUpdate,
     aromeLastUpdate: aromeData?.lastUpdate,
     arpegeLastUpdate: arpegeData?.lastUpdate,
+    iconeuLastUpdate: iconeuData?.lastUpdate,
   };
 }
 
 /**
- * Fusionne les prévisions de quatre modèles en alignant sur jour + heure
+ * Fusionne les prévisions de cinq modèles en alignant sur jour + heure
  * Gestion des cas où un modèle a des données que les autres n'ont pas
  */
 function mergeForecasts(
   gfsData: RainForecast | null,
   wrfData: RainForecast | null,
   aromeData: RainForecast | null,
-  arpegeData: RainForecast | null
+  arpegeData: RainForecast | null,
+  iconeuData: RainForecast | null
 ): MultiModelRainEntry[] {
   const merged = new Map<string, MultiModelRainEntry>();
 
@@ -100,6 +108,7 @@ function mergeForecasts(
         wrf: undefined,
         arome: undefined,
         arpege: undefined,
+        iconeu: undefined,
       });
     }
   }
@@ -123,6 +132,7 @@ function mergeForecasts(
           wrf: entry.amount,
           arome: undefined,
           arpege: undefined,
+          iconeu: undefined,
         });
       }
     }
@@ -147,6 +157,7 @@ function mergeForecasts(
           wrf: undefined,
           arome: entry.amount,
           arpege: undefined,
+          iconeu: undefined,
         });
       }
     }
@@ -171,6 +182,32 @@ function mergeForecasts(
           wrf: undefined,
           arome: undefined,
           arpege: entry.amount,
+          iconeu: undefined,
+        });
+      }
+    }
+  }
+
+  // Ajouter/fusionner les données ICON-EU
+  if (iconeuData) {
+    for (const entry of iconeuData.entries) {
+      const key = makeKey(entry.day, entry.hour);
+      const existing = merged.get(key);
+
+      if (existing) {
+        // Fusionner avec l'entrée existante
+        existing.iconeu = entry.amount;
+      } else {
+        // Créer une nouvelle entrée (ICON-EU uniquement)
+        merged.set(key, {
+          day: entry.day,
+          hour: entry.hour,
+          timeRange: entry.timeRange,
+          gfs: undefined,
+          wrf: undefined,
+          arome: undefined,
+          arpege: undefined,
+          iconeu: entry.amount,
         });
       }
     }

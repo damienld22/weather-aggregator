@@ -5,7 +5,7 @@
 /**
  * Type des modèles météo supportés
  */
-export type WeatherModel = 'GFS' | 'WRF' | 'AROME' | 'ARPEGE';
+export type WeatherModel = 'GFS' | 'WRF' | 'AROME' | 'ARPEGE' | 'ICON-EU';
 
 export interface RainForecastEntry {
   day: string;           // "Mardi 11", "Mercredi 12"
@@ -33,6 +33,7 @@ export interface MultiModelRainEntry {
   wrf?: number;          // Quantité de pluie WRF (undefined si pas de donnée)
   arome?: number;        // Quantité de pluie AROME (undefined si pas de donnée)
   arpege?: number;       // Quantité de pluie ARPEGE (undefined si pas de donnée)
+  iconeu?: number;       // Quantité de pluie ICON-EU (undefined si pas de donnée)
 }
 
 /**
@@ -46,6 +47,7 @@ export interface MultiModelForecast {
   wrfLastUpdate?: string; // Date de dernière actualisation WRF
   aromeLastUpdate?: string; // Date de dernière actualisation AROME
   arpegeLastUpdate?: string; // Date de dernière actualisation ARPEGE
+  iconeuLastUpdate?: string; // Date de dernière actualisation ICON-EU
 }
 
 export type ScraperErrorType = 'FETCH_ERROR' | 'PARSE_ERROR' | 'NETWORK_ERROR';

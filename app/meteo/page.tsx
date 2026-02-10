@@ -1,10 +1,10 @@
 /**
  * Page principale des prévisions météo
- * Server Component qui fetch les données à chaque visite
+ * Server Component qui fetch les données de plusieurs modèles à chaque visite
  */
 
-import { fetchRainForecast } from '@/lib/scraper/meteociel';
-import RainForecastTable from '@/components/RainForecastTable';
+import { fetchMultiModelForecast } from '@/lib/scraper/aggregator';
+import MultiModelRainForecastTable from '@/components/MultiModelRainForecastTable';
 import type { Metadata } from 'next';
 
 // Forcer le rendu dynamique (pas de cache)
@@ -15,18 +15,27 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Prévisions de pluie - La Bouëxière | Weather Aggregator',
   description:
-    'Prévisions détaillées de pluie pour La Bouëxière, agrégation depuis Meteociel',
-  keywords: ['météo', 'pluie', 'prévisions', 'La Bouëxière', 'meteociel'],
+    'Prévisions détaillées de pluie pour La Bouëxière, comparaison des modèles GFS et WRF depuis Meteociel',
+  keywords: [
+    'météo',
+    'pluie',
+    'prévisions',
+    'La Bouëxière',
+    'meteociel',
+    'GFS',
+    'WRF',
+  ],
 };
 
 /**
  * Page météo - Server Component async
- * Le scraping se fait ici, côté serveur, à chaque requête
+ * Le scraping multi-modèles se fait ici, côté serveur, à chaque requête
+ * Les modèles GFS et WRF sont récupérés en parallèle pour optimiser les performances
  */
 export default async function MeteoPage() {
-  // Fetch des données (s'exécute sur le serveur)
+  // Fetch des données multi-modèles (s'exécute sur le serveur)
   // En cas d'erreur, elle sera attrapée par error.tsx
-  const forecast = await fetchRainForecast();
+  const forecast = await fetchMultiModelForecast();
 
-  return <RainForecastTable data={forecast} />;
+  return <MultiModelRainForecastTable data={forecast} />;
 }

@@ -54,6 +54,8 @@ export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
     location: 'La Bouëxière',
     fetchedAt: new Date(),
     entries: mergedEntries,
+    gfsLastUpdate: gfsData?.lastUpdate,
+    wrfLastUpdate: wrfData?.lastUpdate,
   };
 }
 

@@ -3,7 +3,7 @@
  * Orchestration du fetch HTTP et parsing des données
  */
 
-import { parseRainTable } from './parser';
+import { parseRainTable, parseLastUpdate } from './parser';
 import { RainForecast, ScraperError } from './types';
 
 const METEOCIEL_URL =
@@ -44,6 +44,7 @@ export async function fetchRainForecast(): Promise<RainForecast> {
     // Parse du HTML
     console.log('[Scraper] Parsing HTML...');
     const entries = parseRainTable(html);
+    const lastUpdate = parseLastUpdate(html);
 
     // Ajouter le modèle aux entrées
     const entriesWithModel = entries.map(entry => ({
@@ -52,6 +53,9 @@ export async function fetchRainForecast(): Promise<RainForecast> {
     }));
 
     console.log(`[Scraper] Successfully parsed ${entriesWithModel.length} entries`);
+    if (lastUpdate) {
+      console.log(`[Scraper] Last update: ${lastUpdate}`);
+    }
 
     if (entriesWithModel.length === 0) {
       throw new ScraperError(
@@ -64,6 +68,7 @@ export async function fetchRainForecast(): Promise<RainForecast> {
       location: 'La Bouëxière',
       fetchedAt: new Date(),
       entries: entriesWithModel,
+      lastUpdate,
     };
   } catch (error) {
     // Si c'est déjà une ScraperError, on la relance

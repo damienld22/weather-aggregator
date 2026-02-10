@@ -19,6 +19,7 @@ export interface RainForecast {
   location: string;      // "La Bouëxière"
   fetchedAt: Date;       // Date du scraping
   entries: RainForecastEntry[];
+  lastUpdate?: string;   // Date de dernière actualisation du modèle (ex: "17:01 (run GFS de 12Z)")
 }
 
 /**
@@ -39,6 +40,8 @@ export interface MultiModelForecast {
   location: string;      // "La Bouëxière"
   fetchedAt: Date;       // Date du scraping
   entries: MultiModelRainEntry[];
+  gfsLastUpdate?: string; // Date de dernière actualisation GFS
+  wrfLastUpdate?: string; // Date de dernière actualisation WRF
 }
 
 export type ScraperErrorType = 'FETCH_ERROR' | 'PARSE_ERROR' | 'NETWORK_ERROR';

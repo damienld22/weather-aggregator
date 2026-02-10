@@ -181,3 +181,42 @@ function formatDay(shortDay: string): string {
 
   return shortDay;
 }
+
+/**
+ * Extrait la date de dernière actualisation du modèle
+ * Recherche le texte "Réactualisé à HH:MM (run MODEL de XXZ)"
+ * @param html - Le HTML brut de la page
+ * @returns La date d'actualisation ou undefined si non trouvée
+ */
+export function parseLastUpdate(html: string): string | undefined {
+  try {
+    // Recherche directe dans le HTML brut pour gérer l'encodage
+    // Pattern flexible pour gérer "Réactualisé" avec différents encodages
+    const pattern = /R[eé]actualis[eé]\s+[aà]\s+(\d{2}:\d{2})\s*\(run\s+(\w+)\s+de\s+(\d+Z)\)/i;
+    const match = html.match(pattern);
+
+    if (match) {
+      const time = match[1];      // "17:01"
+      const model = match[2];     // "GFS" ou "WRF"
+      const run = match[3];       // "12Z"
+      const result = `${time} (run ${model} de ${run})`;
+      return result;
+    }
+
+    // Essayer une recherche plus simple si le pattern complet ne matche pas
+    const simplePattern = /(\d{2}:\d{2})\s*\(run\s+(\w+)\s+de\s+(\d+Z)\)/i;
+    const simpleMatch = html.match(simplePattern);
+
+    if (simpleMatch) {
+      const time = simpleMatch[1];
+      const model = simpleMatch[2];
+      const run = simpleMatch[3];
+      return `${time} (run ${model} de ${run})`;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.warn('[Parser] Failed to extract last update date:', error);
+    return undefined;
+  }
+}

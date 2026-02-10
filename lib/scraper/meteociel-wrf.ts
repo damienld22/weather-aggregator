@@ -5,7 +5,7 @@
  * @see https://www.meteociel.fr/previsions-wrf/12368/la_bouexiere.htm
  */
 
-import { parseRainTable } from './parser';
+import { parseRainTable, parseLastUpdate } from './parser';
 import { RainForecast, ScraperError } from './types';
 
 const METEOCIEL_WRF_URL =
@@ -46,6 +46,7 @@ export async function fetchRainForecastWRF(): Promise<RainForecast> {
     // Parse du HTML
     console.log('[Scraper WRF] Parsing HTML...');
     const entries = parseRainTable(html);
+    const lastUpdate = parseLastUpdate(html);
 
     // Ajouter le modèle aux entrées
     const entriesWithModel = entries.map(entry => ({
@@ -54,6 +55,9 @@ export async function fetchRainForecastWRF(): Promise<RainForecast> {
     }));
 
     console.log(`[Scraper WRF] Successfully parsed ${entriesWithModel.length} entries`);
+    if (lastUpdate) {
+      console.log(`[Scraper WRF] Last update: ${lastUpdate}`);
+    }
 
     if (entriesWithModel.length === 0) {
       throw new ScraperError(
@@ -66,6 +70,7 @@ export async function fetchRainForecastWRF(): Promise<RainForecast> {
       location: 'La Bouëxière',
       fetchedAt: new Date(),
       entries: entriesWithModel,
+      lastUpdate,
     };
   } catch (error) {
     // Si c'est déjà une ScraperError, on la relance

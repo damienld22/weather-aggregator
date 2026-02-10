@@ -41,9 +41,21 @@ export default function MultiModelRainForecastTable({ data }: Props) {
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Mis à jour le {formatDate(data.fetchedAt)}
         </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-          Source: meteociel.fr • Modèles: GFS et WRF • Les valeurs indiquent la
-          quantité de pluie sur 3 heures
+        <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
+          {data.gfsLastUpdate && (
+            <span className="rounded bg-blue-100 px-2 py-1 dark:bg-blue-900/30">
+              <strong>GFS:</strong> {data.gfsLastUpdate}
+            </span>
+          )}
+          {data.wrfLastUpdate && (
+            <span className="rounded bg-purple-100 px-2 py-1 dark:bg-purple-900/30">
+              <strong>WRF:</strong> {data.wrfLastUpdate}
+            </span>
+          )}
+        </div>
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
+          Source: meteociel.fr • Les valeurs indiquent la quantité de pluie sur
+          3 heures
         </p>
       </header>
 

@@ -128,7 +128,7 @@ function parseARPEGEHourlyData(html: string): HourlyEntry[] {
     let currentDay = '';
 
     // Trouver le tableau qui contient "Pluiesur 1h"
-    let targetTable: ReturnType<typeof $> | null = null;
+    let targetTableElement: cheerio.Element | null = null;
 
     $('table').each((_, table) => {
       const tableText = $(table).text();
@@ -146,18 +146,20 @@ function parseARPEGEHourlyData(html: string): HourlyEntry[] {
             }
           }
         });
-        if (hasData && !targetTable) {
-          targetTable = $table;
+        if (hasData && !targetTableElement) {
+          targetTableElement = table;
         }
       }
     });
 
-    if (!targetTable) {
+    if (!targetTableElement) {
       throw new ScraperError(
         'PARSE_ERROR',
         'Impossible de trouver le tableau ARPEGE de prévisions de pluie'
       );
     }
+
+    const targetTable = $(targetTableElement);
 
     // Parser le tableau trouvé
     targetTable.find('tr').each((_rowIndex: number, row: cheerio.Element) => {

@@ -130,7 +130,7 @@ function parseICONEUHourlyData(html: string): HourlyEntry[] {
     let currentDay = '';
 
     // Trouver le tableau principal de prévisions
-    let targetTable: ReturnType<typeof $> | null = null;
+    let targetTableElement: cheerio.Element | null = null;
 
     $('table').each((_, table) => {
       const $table = $(table);
@@ -148,17 +148,19 @@ function parseICONEUHourlyData(html: string): HourlyEntry[] {
         }
       });
 
-      if (hasTimeData && !targetTable) {
-        targetTable = $table;
+      if (hasTimeData && !targetTableElement) {
+        targetTableElement = table;
       }
     });
 
-    if (!targetTable) {
+    if (!targetTableElement) {
       throw new ScraperError(
         'PARSE_ERROR',
         'Impossible de trouver le tableau ICON-EU de prévisions'
       );
     }
+
+    const targetTable = $(targetTableElement);
 
     // Parser le tableau trouvé
     targetTable.find('tr').each((_rowIndex: number, row: cheerio.Element) => {

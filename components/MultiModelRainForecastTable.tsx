@@ -45,9 +45,9 @@ export default function MultiModelRainForecastTable({ data }: Props) {
           Mis à jour le {formatDate(data.fetchedAt)}
         </p>
         <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
-          {data.gfsLastUpdate && (
-            <span className="rounded bg-blue-100 px-2 py-1 dark:bg-blue-900/30">
-              <strong>GFS:</strong> {data.gfsLastUpdate}
+          {data.aromeLastUpdate && (
+            <span className="rounded bg-green-100 px-2 py-1 dark:bg-green-900/30">
+              <strong>AROME:</strong> {data.aromeLastUpdate}
             </span>
           )}
           {data.wrfLastUpdate && (
@@ -55,9 +55,9 @@ export default function MultiModelRainForecastTable({ data }: Props) {
               <strong>WRF:</strong> {data.wrfLastUpdate}
             </span>
           )}
-          {data.aromeLastUpdate && (
-            <span className="rounded bg-green-100 px-2 py-1 dark:bg-green-900/30">
-              <strong>AROME:</strong> {data.aromeLastUpdate}
+          {data.iconeuLastUpdate && (
+            <span className="rounded bg-teal-100 px-2 py-1 dark:bg-teal-900/30">
+              <strong>ICON-EU:</strong> {data.iconeuLastUpdate}
             </span>
           )}
           {data.arpegeLastUpdate && (
@@ -65,9 +65,9 @@ export default function MultiModelRainForecastTable({ data }: Props) {
               <strong>ARPEGE:</strong> {data.arpegeLastUpdate}
             </span>
           )}
-          {data.iconeuLastUpdate && (
-            <span className="rounded bg-teal-100 px-2 py-1 dark:bg-teal-900/30">
-              <strong>ICON-EU:</strong> {data.iconeuLastUpdate}
+          {data.gfsLastUpdate && (
+            <span className="rounded bg-blue-100 px-2 py-1 dark:bg-blue-900/30">
+              <strong>GFS:</strong> {data.gfsLastUpdate}
             </span>
           )}
         </div>
@@ -78,9 +78,9 @@ export default function MultiModelRainForecastTable({ data }: Props) {
       </header>
 
       {/* Alertes si un modèle est indisponible */}
-      {!hasGFS && (
+      {!hasAROME && (
         <div className="mb-6 rounded-lg bg-yellow-100 p-4 text-sm text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
-          ⚠️ Les données du modèle GFS sont temporairement indisponibles.
+          ⚠️ Les données du modèle AROME sont temporairement indisponibles.
         </div>
       )}
       {!hasWRF && (
@@ -88,9 +88,9 @@ export default function MultiModelRainForecastTable({ data }: Props) {
           ⚠️ Les données du modèle WRF sont temporairement indisponibles.
         </div>
       )}
-      {!hasAROME && (
+      {!hasICONEU && (
         <div className="mb-6 rounded-lg bg-yellow-100 p-4 text-sm text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
-          ⚠️ Les données du modèle AROME sont temporairement indisponibles.
+          ⚠️ Les données du modèle ICON-EU sont temporairement indisponibles.
         </div>
       )}
       {!hasARPEGE && (
@@ -98,9 +98,9 @@ export default function MultiModelRainForecastTable({ data }: Props) {
           ⚠️ Les données du modèle ARPEGE sont temporairement indisponibles.
         </div>
       )}
-      {!hasICONEU && (
+      {!hasGFS && (
         <div className="mb-6 rounded-lg bg-yellow-100 p-4 text-sm text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
-          ⚠️ Les données du modèle ICON-EU sont temporairement indisponibles.
+          ⚠️ Les données du modèle GFS sont temporairement indisponibles.
         </div>
       )}
 
@@ -120,29 +120,29 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                 {day}
               </h2>
 
-              {/* Tableau responsive */}
+              {/* Tableau responsive avec colonne sticky */}
               <div className="overflow-hidden rounded-lg shadow-md">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
+                        <th className="sticky left-0 z-10 bg-gray-50 px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 shadow-[2px_0_4px_rgba(0,0,0,0.1)] dark:bg-gray-800 dark:text-gray-400 sm:px-4 md:px-6">
                           Période (3h)
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
-                          GFS {hasGFS && `(Total: ${gfsTotal.toFixed(1)} mm)`}
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
-                          WRF {hasWRF && `(Total: ${wrfTotal.toFixed(1)} mm)`}
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
+                        <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
                           AROME {hasAROME && `(Total: ${aromeTotal.toFixed(1)} mm)`}
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
+                        <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
+                          WRF {hasWRF && `(Total: ${wrfTotal.toFixed(1)} mm)`}
+                        </th>
+                        <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
+                          ICON-EU {hasICONEU && `(Total: ${iconeuTotal.toFixed(1)} mm)`}
+                        </th>
+                        <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
                           ARPEGE {hasARPEGE && `(Total: ${arpegeTotal.toFixed(1)} mm)`}
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
-                          ICON-EU {hasICONEU && `(Total: ${iconeuTotal.toFixed(1)} mm)`}
+                        <th className="min-w-[100px] px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-4 md:px-6">
+                          GFS {hasGFS && `(Total: ${gfsTotal.toFixed(1)} mm)`}
                         </th>
                       </tr>
                     </thead>
@@ -152,29 +152,11 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                         key={`${day}-${entry.hour}-${index}`}
                         className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
                       >
-                        <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 sm:px-6">
+                        <td className="sticky left-0 z-10 min-h-[44px] whitespace-nowrap bg-white px-3 py-3 text-sm font-medium text-gray-900 shadow-[2px_0_4px_rgba(0,0,0,0.1)] dark:bg-gray-900 dark:text-gray-100 sm:px-4 md:px-6 md:py-4">
                           {entry.timeRange}
                         </td>
                         <td
-                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
-                            entry.gfs !== undefined
-                              ? getRainIntensityColor(entry.gfs)
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {formatOptionalRain(entry.gfs)}
-                        </td>
-                        <td
-                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
-                            entry.wrf !== undefined
-                              ? getRainIntensityColor(entry.wrf)
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {formatOptionalRain(entry.wrf)}
-                        </td>
-                        <td
-                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
+                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
                             entry.arome !== undefined
                               ? getRainIntensityColor(entry.arome)
                               : 'text-gray-400'
@@ -183,7 +165,25 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                           {formatOptionalRain(entry.arome)}
                         </td>
                         <td
-                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
+                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
+                            entry.wrf !== undefined
+                              ? getRainIntensityColor(entry.wrf)
+                              : 'text-gray-400'
+                          }`}
+                        >
+                          {formatOptionalRain(entry.wrf)}
+                        </td>
+                        <td
+                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
+                            entry.iconeu !== undefined
+                              ? getRainIntensityColor(entry.iconeu)
+                              : 'text-gray-400'
+                          }`}
+                        >
+                          {formatOptionalRain(entry.iconeu)}
+                        </td>
+                        <td
+                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
                             entry.arpege !== undefined
                               ? getRainIntensityColor(entry.arpege)
                               : 'text-gray-400'
@@ -192,13 +192,13 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                           {formatOptionalRain(entry.arpege)}
                         </td>
                         <td
-                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
-                            entry.iconeu !== undefined
-                              ? getRainIntensityColor(entry.iconeu)
+                          className={`min-h-[44px] min-w-[44px] whitespace-nowrap px-3 py-3 text-right text-sm font-medium sm:px-4 md:px-6 md:py-4 ${
+                            entry.gfs !== undefined
+                              ? getRainIntensityColor(entry.gfs)
                               : 'text-gray-400'
                           }`}
                         >
-                          {formatOptionalRain(entry.iconeu)}
+                          {formatOptionalRain(entry.gfs)}
                         </td>
                       </tr>
                     ))}

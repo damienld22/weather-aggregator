@@ -128,7 +128,7 @@ function parseARPEGEHourlyData(html: string): HourlyEntry[] {
     let currentDay = '';
 
     // Trouver le tableau qui contient "Pluiesur 1h"
-    let targetTable: cheerio.Cheerio<cheerio.Element> | null = null;
+    let targetTable: ReturnType<typeof $> | null = null;
 
     $('table').each((_, table) => {
       const tableText = $(table).text();
@@ -160,7 +160,7 @@ function parseARPEGEHourlyData(html: string): HourlyEntry[] {
     }
 
     // Parser le tableau trouvé
-    targetTable.find('tr').each((_rowIndex, row) => {
+    targetTable.find('tr').each((_rowIndex: number, row: cheerio.Element) => {
       const cells = $(row).find('td');
 
       // Ignorer les lignes d'en-tête et les lignes vides
@@ -253,62 +253,73 @@ function parseHourlyEntry(
 /**
  * Agrège les données horaires en tranches de 3h
  * Les tranches cibles sont : 01h, 04h, 07h, 10h, 13h, 16h, 19h, 22h
+ * Soit les tranches : 22h-01h, 01h-04h, 04h-07h, 07h-10h, 10h-13h, 13h-16h, 16h-19h, 19h-22h
  * (alignées avec les autres modèles GFS/WRF/AROME)
  */
 function aggregateTo3Hours(hourlyEntries: HourlyEntry[]): RainForecastEntry[] {
   const result: RainForecastEntry[] = [];
 
-  // Regrouper par jour
-  const byDay = new Map<string, HourlyEntry[]>();
+  // 1. Créer un index global (jour, heure) -> entry
+  const globalIndex = new Map<string, HourlyEntry>();
   for (const entry of hourlyEntries) {
-    const dayKey = entry.day;
-    if (!byDay.has(dayKey)) {
-      byDay.set(dayKey, []);
-    }
-    byDay.get(dayKey)!.push(entry);
+    const key = `${entry.day}-${entry.hour}`;
+    globalIndex.set(key, entry);
   }
 
-  // Pour chaque jour, créer des tranches de 3h
-  for (const [dayKey, dayEntries] of byDay.entries()) {
-    // Trier par heure
-    dayEntries.sort((a, b) => a.hour - b.hour);
+  // 2. Obtenir la liste des jours uniques dans l'ordre
+  const days = Array.from(new Set(hourlyEntries.map(e => e.day)));
 
-    // Créer un Map heure -> amount pour un accès facile
-    const hourMap = new Map<number, number>();
-    for (const entry of dayEntries) {
-      hourMap.set(entry.hour, entry.amount);
-    }
+  // 3. Pour chaque jour, créer les tranches de 3h
+  // Inclut la tranche 22h-01h qui chevauche minuit
+  const targetHours = [1, 4, 7, 10, 13, 16, 19, 22];
 
-    // Heures cibles pour les tranches de 3h (fin de tranche)
-    const targetHours = [1, 4, 7, 10, 13, 16, 19, 22];
+  for (let i = 0; i < days.length; i++) {
+    const day = days[i];
+    const prevDay = i > 0 ? days[i - 1] : null;
 
     for (const endHour of targetHours) {
-      // Calculer les 3 heures précédentes (inclus l'heure de fin)
-      const hours = [endHour - 2, endHour - 1, endHour].map(h => {
-        if (h <= 0) return h + 24; // Gérer le passage de minuit
-        return h;
-      });
+      // Pour une tranche se terminant à endHour, on cumule les heures précédentes
+      // Par exemple pour 04h : on cumule les données de 02h, 03h, 04h
+      // Pour 01h : on cumule les données de 23h (jour précédent), 00h, 01h
+      const hours = [endHour - 2, endHour - 1, endHour];
 
-      // Vérifier si on a au moins une donnée pour cette tranche
-      const hasData = hours.some(h => hourMap.has(h));
+      let totalAmount = 0;
+      let hasData = false;
 
-      if (hasData) {
-        // Cumuler les quantités de pluie
-        let totalAmount = 0;
-        for (const h of hours) {
-          totalAmount += hourMap.get(h) || 0;
+      for (const h of hours) {
+        let targetHour = h;
+        let targetDay = day;
+
+        // Si l'heure est négative (cas de la tranche 22h-01h),
+        // récupérer depuis le jour précédent
+        if (h < 0) {
+          targetHour = h + 24; // -1 devient 23
+          if (prevDay) {
+            targetDay = prevDay;
+          } else {
+            // Pas de jour précédent, skip cette heure
+            continue;
+          }
         }
 
-        // Calculer le timeRange
-        const startHour = hours[0];
+        const key = `${targetDay}-${targetHour}`;
+        const entry = globalIndex.get(key);
+        if (entry) {
+          totalAmount += entry.amount;
+          hasData = true;
+        }
+      }
+
+      if (hasData) {
+        let startHour = endHour - 3;
+        if (startHour < 0) {
+          startHour += 24;
+        }
         const endHourFormatted = `${endHour.toString().padStart(2, '0')}h`;
         const timeRange = `${startHour.toString().padStart(2, '0')}h-${endHourFormatted}`;
 
-        // Formater le jour
-        const dayFormatted = formatDay(dayKey);
-
         result.push({
-          day: dayFormatted,
+          day: formatDay(day),
           hour: endHourFormatted,
           amount: totalAmount,
           timeRange,

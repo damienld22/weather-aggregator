@@ -31,6 +31,7 @@ export default function MultiModelRainForecastTable({ data }: Props) {
   const hasGFS = data.entries.some(e => e.gfs !== undefined);
   const hasWRF = data.entries.some(e => e.wrf !== undefined);
   const hasAROME = data.entries.some(e => e.arome !== undefined);
+  const hasARPEGE = data.entries.some(e => e.arpege !== undefined);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -58,6 +59,11 @@ export default function MultiModelRainForecastTable({ data }: Props) {
               <strong>AROME:</strong> {data.aromeLastUpdate}
             </span>
           )}
+          {data.arpegeLastUpdate && (
+            <span className="rounded bg-orange-100 px-2 py-1 dark:bg-orange-900/30">
+              <strong>ARPEGE:</strong> {data.arpegeLastUpdate}
+            </span>
+          )}
         </div>
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
           Source: meteociel.fr • Les valeurs indiquent la quantité de pluie sur
@@ -81,6 +87,11 @@ export default function MultiModelRainForecastTable({ data }: Props) {
           ⚠️ Les données du modèle AROME sont temporairement indisponibles.
         </div>
       )}
+      {!hasARPEGE && (
+        <div className="mb-6 rounded-lg bg-yellow-100 p-4 text-sm text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+          ⚠️ Les données du modèle ARPEGE sont temporairement indisponibles.
+        </div>
+      )}
 
       {/* Tableaux par jour */}
       <div className="space-y-8">
@@ -89,6 +100,7 @@ export default function MultiModelRainForecastTable({ data }: Props) {
           const gfsTotal = entries.reduce((sum, e) => sum + (e.gfs ?? 0), 0);
           const wrfTotal = entries.reduce((sum, e) => sum + (e.wrf ?? 0), 0);
           const aromeTotal = entries.reduce((sum, e) => sum + (e.arome ?? 0), 0);
+          const arpegeTotal = entries.reduce((sum, e) => sum + (e.arpege ?? 0), 0);
 
           return (
             <section key={day}>
@@ -113,6 +125,9 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                         </th>
                         <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
                           AROME {hasAROME && `(Total: ${aromeTotal.toFixed(1)} mm)`}
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:px-6">
+                          ARPEGE {hasARPEGE && `(Total: ${arpegeTotal.toFixed(1)} mm)`}
                         </th>
                       </tr>
                     </thead>
@@ -151,6 +166,15 @@ export default function MultiModelRainForecastTable({ data }: Props) {
                           }`}
                         >
                           {formatOptionalRain(entry.arome)}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap px-4 py-4 text-right text-sm font-medium sm:px-6 ${
+                            entry.arpege !== undefined
+                              ? getRainIntensityColor(entry.arpege)
+                              : 'text-gray-400'
+                          }`}
+                        >
+                          {formatOptionalRain(entry.arpege)}
                         </td>
                       </tr>
                     ))}
@@ -192,6 +216,10 @@ export default function MultiModelRainForecastTable({ data }: Props) {
             <p>
               <strong>AROME</strong> : Modèle français de Météo-France, très haute
               résolution (~1.3 km), prévisions à court terme (48h)
+            </p>
+            <p>
+              <strong>ARPEGE</strong> : Modèle global de Météo-France,
+              résolution variable (~10 km sur la France), prévisions à 4 jours
             </p>
           </div>
         </div>

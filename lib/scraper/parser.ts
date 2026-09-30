@@ -5,13 +5,15 @@
 import * as cheerio from 'cheerio';
 import type { RainForecastEntry } from './types';
 import { ScraperError } from './types';
+import { describeSlot, localToTimestamp } from './slots';
 
 /**
  * Parse le HTML de meteociel pour extraire les prévisions de pluie
  * @param html - Le HTML brut de la page
+ * @param reference - Date de récupération, pour retrouver le mois et l'année des jours affichés
  * @returns Tableau des prévisions de pluie
  */
-export function parseRainTable(html: string): RainForecastEntry[] {
+export function parseRainTable(html: string, reference: Date): RainForecastEntry[] {
   try {
     const $ = cheerio.load(html);
     const entries: RainForecastEntry[] = [];
@@ -75,7 +77,7 @@ export function parseRainTable(html: string): RainForecastEntry[] {
         const hourText = $(cells.eq(1)).text().trim();
         const rainText = $(cells.eq(7)).text().trim();
 
-        const entry = parseEntry(currentDay, hourText, rainText);
+        const entry = parseEntry(currentDay, hourText, rainText, reference);
         if (entry) {
           entries.push(entry);
         }
@@ -84,7 +86,7 @@ export function parseRainTable(html: string): RainForecastEntry[] {
         const hourText = firstCell;
         const rainText = $(cells.eq(6)).text().trim();
 
-        const entry = parseEntry(currentDay, hourText, rainText);
+        const entry = parseEntry(currentDay, hourText, rainText, reference);
         if (entry) {
           entries.push(entry);
         }
@@ -114,31 +116,22 @@ export function parseRainTable(html: string): RainForecastEntry[] {
 }
 
 /**
- * Parse une entrée individuelle (jour + heure + pluie)
+ * Parse une ligne meteociel (jour + heure + pluie) en instant absolu et quantité
+ * @param dayLabel - Jour au format court ("Mer30")
+ * @param reference - Date de récupération, pour retrouver le mois et l'année
  */
-function parseEntry(
-  day: string,
+export function parseRainRow(
+  dayLabel: string,
   hourText: string,
-  rainText: string
-): RainForecastEntry | null {
-  // Parser l'heure
+  rainText: string,
+  reference: Date
+): { timestamp: number; amount: number } | null {
+  const dayMatch = dayLabel.match(/(\d+)$/);
   const hourMatch = hourText.match(/(\d+):(\d+)/);
-  if (!hourMatch) {
+  if (!dayMatch || !hourMatch) {
     return null;
   }
 
-  const hourNum = parseInt(hourMatch[1]);
-  const hour = `${hourNum.toString().padStart(2, '0')}h`;
-
-  // Calculer la période de 3h (l'heure affichée est la fin de la période)
-  // Gérer le passage de minuit (ex: 01h -> 22h-01h)
-  let startHour = hourNum - 3;
-  if (startHour < 0) {
-    startHour += 24;
-  }
-  const timeRange = `${startHour.toString().padStart(2, '0')}h-${hour}`;
-
-  // Parser la quantité de pluie
   let amount = 0;
   if (rainText !== '--' && rainText !== '') {
     const rainMatch = rainText.match(/(\d+\.?\d*)\s*mm/i);
@@ -147,39 +140,27 @@ function parseEntry(
     }
   }
 
-  // Formater le jour (ex: "Mar10" → "Mardi 10")
-  const dayFormatted = formatDay(day);
-
   return {
-    day: dayFormatted,
-    hour,
+    timestamp: localToTimestamp(parseInt(dayMatch[1]), parseInt(hourMatch[1]), reference),
     amount,
-    timeRange,
   };
 }
 
 /**
- * Formate le jour depuis le format court (Mar10) vers le format long (Mardi 10)
+ * Parse une entrée de 3h (l'heure affichée est la fin de la période)
  */
-function formatDay(shortDay: string): string {
-  const dayMap: Record<string, string> = {
-    Lun: 'Lundi',
-    Mar: 'Mardi',
-    Mer: 'Mercredi',
-    Jeu: 'Jeudi',
-    Ven: 'Vendredi',
-    Sam: 'Samedi',
-    Dim: 'Dimanche',
-  };
-
-  const match = shortDay.match(/^(Lun|Mar|Mer|Jeu|Ven|Sam|Dim)(\d+)$/);
-  if (match) {
-    const dayName = dayMap[match[1]] || match[1];
-    const dayNum = match[2];
-    return `${dayName} ${dayNum}`;
+function parseEntry(
+  day: string,
+  hourText: string,
+  rainText: string,
+  reference: Date
+): RainForecastEntry | null {
+  const row = parseRainRow(day, hourText, rainText, reference);
+  if (!row) {
+    return null;
   }
 
-  return shortDay;
+  return { ...describeSlot(row.timestamp), amount: row.amount };
 }
 
 /**

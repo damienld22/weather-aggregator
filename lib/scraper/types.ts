@@ -8,6 +8,7 @@
 export type WeatherModel = 'GFS' | 'WRF' | 'AROME' | 'ARPEGE' | 'ICON-EU';
 
 export interface RainForecastEntry {
+  timestamp: number;     // Fin du créneau, en ms depuis l'epoch (UTC)
   day: string;           // "Mardi 11", "Mercredi 12"
   hour: string;          // "22h"
   amount: number;        // 0.3 (en mm)
@@ -26,6 +27,7 @@ export interface RainForecast {
  * Entrée de prévisions avec plusieurs modèles météo
  */
 export interface MultiModelRainEntry {
+  timestamp: number;     // Fin du créneau, en ms depuis l'epoch (UTC)
   day: string;           // "Mardi 11", "Mercredi 12"
   hour: string;          // "22h"
   timeRange: string;     // "19h-22h" (période de 3h)

@@ -16,6 +16,7 @@ const METEOCIEL_URL =
  */
 export async function fetchRainForecast(): Promise<RainForecast> {
   const startTime = Date.now();
+  const fetchedAt = new Date();
 
   try {
     console.log('[Scraper] Fetching meteociel.fr...');
@@ -43,7 +44,7 @@ export async function fetchRainForecast(): Promise<RainForecast> {
 
     // Parse du HTML
     console.log('[Scraper] Parsing HTML...');
-    const entries = parseRainTable(html);
+    const entries = parseRainTable(html, fetchedAt);
     const lastUpdate = parseLastUpdate(html);
 
     // Ajouter le modèle aux entrées
@@ -66,7 +67,7 @@ export async function fetchRainForecast(): Promise<RainForecast> {
 
     return {
       location: 'La Bouëxière',
-      fetchedAt: new Date(),
+      fetchedAt,
       entries: entriesWithModel,
       lastUpdate,
     };

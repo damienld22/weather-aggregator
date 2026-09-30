@@ -64,7 +64,13 @@ export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
   }
 
   // Merger les données
-  const mergedEntries = mergeForecasts(gfsData, wrfData, aromeData, arpegeData, iconeuData);
+  const mergedEntries = mergeForecasts({
+    gfs: gfsData,
+    wrf: wrfData,
+    arome: aromeData,
+    arpege: arpegeData,
+    iconeu: iconeuData,
+  });
 
   console.log(`[Aggregator] Merged ${mergedEntries.length} entries`);
 
@@ -80,140 +86,29 @@ export async function fetchMultiModelForecast(): Promise<MultiModelForecast> {
   };
 }
 
+type ModelKey = 'gfs' | 'wrf' | 'arome' | 'arpege' | 'iconeu';
+
 /**
- * Fusionne les prévisions de cinq modèles en alignant sur jour + heure
- * Gestion des cas où un modèle a des données que les autres n'ont pas
+ * Fusionne les prévisions des modèles en alignant sur l'instant de fin de créneau,
+ * puis trie chronologiquement (un modèle peut avoir des créneaux absents des autres)
  */
-function mergeForecasts(
-  gfsData: RainForecast | null,
-  wrfData: RainForecast | null,
-  aromeData: RainForecast | null,
-  arpegeData: RainForecast | null,
-  iconeuData: RainForecast | null
+export function mergeForecasts(
+  models: Partial<Record<ModelKey, RainForecast | null>>
 ): MultiModelRainEntry[] {
-  const merged = new Map<string, MultiModelRainEntry>();
+  const merged = new Map<number, MultiModelRainEntry>();
 
-  // Créer une clé unique pour chaque créneau horaire
-  const makeKey = (day: string, hour: string) => `${day}-${hour}`;
-
-  // Ajouter les données GFS
-  if (gfsData) {
-    for (const entry of gfsData.entries) {
-      const key = makeKey(entry.day, entry.hour);
-      merged.set(key, {
+  for (const [model, data] of Object.entries(models) as Array<[ModelKey, RainForecast | null]>) {
+    for (const entry of data?.entries ?? []) {
+      const row = merged.get(entry.timestamp) ?? {
+        timestamp: entry.timestamp,
         day: entry.day,
         hour: entry.hour,
         timeRange: entry.timeRange,
-        gfs: entry.amount,
-        wrf: undefined,
-        arome: undefined,
-        arpege: undefined,
-        iconeu: undefined,
-      });
+      };
+      row[model] = entry.amount;
+      merged.set(entry.timestamp, row);
     }
   }
 
-  // Ajouter/fusionner les données WRF
-  if (wrfData) {
-    for (const entry of wrfData.entries) {
-      const key = makeKey(entry.day, entry.hour);
-      const existing = merged.get(key);
-
-      if (existing) {
-        // Fusionner avec l'entrée existante
-        existing.wrf = entry.amount;
-      } else {
-        // Créer une nouvelle entrée (WRF uniquement)
-        merged.set(key, {
-          day: entry.day,
-          hour: entry.hour,
-          timeRange: entry.timeRange,
-          gfs: undefined,
-          wrf: entry.amount,
-          arome: undefined,
-          arpege: undefined,
-          iconeu: undefined,
-        });
-      }
-    }
-  }
-
-  // Ajouter/fusionner les données AROME
-  if (aromeData) {
-    for (const entry of aromeData.entries) {
-      const key = makeKey(entry.day, entry.hour);
-      const existing = merged.get(key);
-
-      if (existing) {
-        // Fusionner avec l'entrée existante
-        existing.arome = entry.amount;
-      } else {
-        // Créer une nouvelle entrée (AROME uniquement)
-        merged.set(key, {
-          day: entry.day,
-          hour: entry.hour,
-          timeRange: entry.timeRange,
-          gfs: undefined,
-          wrf: undefined,
-          arome: entry.amount,
-          arpege: undefined,
-          iconeu: undefined,
-        });
-      }
-    }
-  }
-
-  // Ajouter/fusionner les données ARPEGE
-  if (arpegeData) {
-    for (const entry of arpegeData.entries) {
-      const key = makeKey(entry.day, entry.hour);
-      const existing = merged.get(key);
-
-      if (existing) {
-        // Fusionner avec l'entrée existante
-        existing.arpege = entry.amount;
-      } else {
-        // Créer une nouvelle entrée (ARPEGE uniquement)
-        merged.set(key, {
-          day: entry.day,
-          hour: entry.hour,
-          timeRange: entry.timeRange,
-          gfs: undefined,
-          wrf: undefined,
-          arome: undefined,
-          arpege: entry.amount,
-          iconeu: undefined,
-        });
-      }
-    }
-  }
-
-  // Ajouter/fusionner les données ICON-EU
-  if (iconeuData) {
-    for (const entry of iconeuData.entries) {
-      const key = makeKey(entry.day, entry.hour);
-      const existing = merged.get(key);
-
-      if (existing) {
-        // Fusionner avec l'entrée existante
-        existing.iconeu = entry.amount;
-      } else {
-        // Créer une nouvelle entrée (ICON-EU uniquement)
-        merged.set(key, {
-          day: entry.day,
-          hour: entry.hour,
-          timeRange: entry.timeRange,
-          gfs: undefined,
-          wrf: undefined,
-          arome: undefined,
-          arpege: undefined,
-          iconeu: entry.amount,
-        });
-      }
-    }
-  }
-
-  // Convertir la Map en tableau et trier chronologiquement
-  // Le tri est basé sur l'ordre d'apparition (les dates sont déjà dans l'ordre)
-  return Array.from(merged.values());
+  return Array.from(merged.values()).sort((a, b) => a.timestamp - b.timestamp);
 }

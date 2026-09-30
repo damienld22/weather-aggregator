@@ -18,6 +18,7 @@ const METEOCIEL_WRF_URL =
  */
 export async function fetchRainForecastWRF(): Promise<RainForecast> {
   const startTime = Date.now();
+  const fetchedAt = new Date();
 
   try {
     console.log('[Scraper WRF] Fetching meteociel.fr/previsions-wrf...');
@@ -45,7 +46,7 @@ export async function fetchRainForecastWRF(): Promise<RainForecast> {
 
     // Parse du HTML
     console.log('[Scraper WRF] Parsing HTML...');
-    const entries = parseRainTable(html);
+    const entries = parseRainTable(html, fetchedAt);
     const lastUpdate = parseLastUpdate(html);
 
     // Ajouter le modèle aux entrées
@@ -68,7 +69,7 @@ export async function fetchRainForecastWRF(): Promise<RainForecast> {
 
     return {
       location: 'La Bouëxière',
-      fetchedAt: new Date(),
+      fetchedAt,
       entries: entriesWithModel,
       lastUpdate,
     };
